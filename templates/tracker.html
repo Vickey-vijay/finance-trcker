@@ -1,0 +1,31 @@
+{% extends "app_base.html" %}
+{% set active = 'tracker' %}
+{% block title %}Tracker · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>Tracker</h2></div>
+{% if not has_data %}
+<div class="empty card"><div class="big">📈</div>No data to track yet.
+  <a href="{{ url_for('dashboard') }}">Upload a statement</a> first.</div>
+{% else %}
+<div class="card"><h3>Monthly credit vs debit</h3><canvas id="monthly" height="110"></canvas></div>
+<div class="two-col">
+  <div class="card"><h3>Daily flow (last 30 days)</h3><canvas id="daily" height="170"></canvas></div>
+  <div class="card"><h3>Spending by weekday</h3><canvas id="weekday" height="170"></canvas></div>
+</div>
+<script>
+const data = {{ data | tojson }};
+const blue='#1a73e8', green='#34a853', red='#ea4335';
+new Chart(monthly,{type:'bar',data:{labels:data.monthly.labels,datasets:[
+  {label:'Credit',data:data.monthly.credit,backgroundColor:green},
+  {label:'Debit',data:data.monthly.debit,backgroundColor:red}]},
+  options:{plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true}}}});
+new Chart(daily,{type:'line',data:{labels:data.daily.labels,datasets:[
+  {label:'Credit',data:data.daily.credit,borderColor:green,tension:.3},
+  {label:'Debit',data:data.daily.debit,borderColor:red,tension:.3}]},
+  options:{plugins:{legend:{position:'top'}}}});
+new Chart(weekday,{type:'bar',data:{labels:data.weekday.labels,datasets:[
+  {label:'Debit',data:data.weekday.debit,backgroundColor:blue}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+</script>
+{% endif %}
+{% endblock %}

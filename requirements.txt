@@ -1,0 +1,8 @@
+# Core dependencies — required to run SmartEdit AI
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Werkzeug==3.0.3
+pdfplumber==0.11.4
+pandas==2.2.2
+python-dotenv==1.0.1
+requests==2.32.3

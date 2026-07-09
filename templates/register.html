@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Register · SmartEdit AI{% endblock %}
+{% block body %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand"><div class="logo">S</div><h1>SmartEdit AI</h1></div>
+    <p class="sub">Create your account</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    <form method="POST">
+      <label>Full name</label>
+      <input type="text" name="name" required placeholder="Shyam Sundar">
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="you@example.com">
+      <label>Password</label>
+      <input type="password" name="password" required placeholder="Choose a password">
+      <button class="btn" style="margin-top:22px">Create account</button>
+    </form>
+    <p class="center muted" style="margin-top:18px;font-size:13px">
+      Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

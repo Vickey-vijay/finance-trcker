@@ -1,0 +1,29 @@
+{% extends "app_base.html" %}
+{% set active = 'add' %}
+{% block title %}Add Entry · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>Add Entry</h2></div>
+<div class="card" style="max-width:560px">
+  <p class="muted" style="margin-bottom:8px">Manually log a credit or debit. Leave the
+     category blank and SmartEdit AI will classify it automatically.</p>
+  <form method="POST">
+    <label>Type</label>
+    <select name="txn_type">
+      <option value="debit">Debit (money out)</option>
+      <option value="credit">Credit (money in)</option>
+    </select>
+    <label>Amount (Rs.)</label>
+    <input type="number" step="0.01" name="amount" required placeholder="e.g. 450">
+    <label>Description</label>
+    <input type="text" name="description" placeholder="e.g. Swiggy dinner / Salary">
+    <label>Date</label>
+    <input type="date" name="date" value="{{ today }}">
+    <label>Category (optional — auto-detected if blank)</label>
+    <select name="category">
+      <option value="">Auto-detect</option>
+      {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    <button class="btn" style="margin-top:22px">Save entry</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "app_base.html" %}
+{% set active = 'view' %}
+{% block title %}View / Database · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h2>View / Database</h2>
+  <div>
+    <span class="pill" style="background:#e7f6ee;color:#11663d">In: Rs.{{ '{:,.0f}'.format(total_in) }}</span>
+    <span class="pill" style="background:#fdeaea;color:#a02020">Out: Rs.{{ '{:,.0f}'.format(total_out) }}</span>
+  </div>
+</div>
+
+<form method="GET" class="filters card" style="padding:14px 16px">
+  <div>
+    <label>Category</label>
+    <select name="category" onchange="this.form.submit()">
+      <option value="">All</option>
+      {% for c in categories %}<option value="{{ c }}" {{ 'selected' if c==sel_cat }}>{{ c }}</option>{% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>Type</label>
+    <select name="type" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="credit" {{ 'selected' if sel_type=='credit' }}>Credit</option>
+      <option value="debit" {{ 'selected' if sel_type=='debit' }}>Debit</option>
+    </select>
+  </div>
+  <div><a class="btn small secondary" href="{{ url_for('view') }}">Reset</a></div>
+</form>
+
+<div class="card">
+  {% if txns %}
+  <table>
+    <thead><tr><th>Date</th><th>Description</th><th>Method</th><th>Category</th>
+      <th style="text-align:right">Amount</th><th></th></tr></thead>
+    <tbody>
+      {% for t in txns %}
+      <tr>
+        <td>{{ t.date }}</td>
+        <td>{{ t.description }}</td>
+        <td class="muted">{{ t.method }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('update_category', txn_id=t.id) }}">
+            <select name="category" onchange="this.form.submit()" style="padding:5px 8px;font-size:12px;width:auto">
+              {% for c in all_categories %}<option value="{{ c }}" {{ 'selected' if c==t.category }}>{{ c }}</option>{% endfor %}
+            </select>
+          </form>
+        </td>
+        <td style="text-align:right" class="{{ 'amt-cr' if t.txn_type=='credit' else 'amt-dr' }}">
+          {{ '+' if t.txn_type=='credit' else '−' }}Rs.{{ '{:,.0f}'.format(t.amount) }}</td>
+        <td>
+          <form method="POST" action="{{ url_for('delete_txn', txn_id=t.id) }}"
+                onsubmit="return confirm('Delete this transaction?')">
+            <button class="btn small danger">✕</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty"><div class="big">🗃️</div>No transactions yet.
+     <a href="{{ url_for('dashboard') }}">Upload a statement</a> or
+     <a href="{{ url_for('add') }}">add one manually</a>.</div>
+  {% endif %}
+</div>
+{% endblock %}

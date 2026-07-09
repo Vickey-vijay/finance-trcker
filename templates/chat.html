@@ -1,0 +1,46 @@
+{% extends "app_base.html" %}
+{% set active = 'chat' %}
+{% block title %}AI Chat · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>AI Assistant</h2><span class="pill">RAG · {{ provider }}</span></div>
+<div class="chat-wrap">
+  <div class="chat-msgs" id="msgs">
+    {% if not history %}
+    <div class="msg bot">Hi {{ user_name }}! Ask me anything about your spending — e.g.
+      "How much did I spend on Amazon?", "What were my top expenses last month?",
+      or "How can I save more?"</div>
+    {% endif %}
+    {% for h in history %}
+      <div class="msg {{ 'user' if h.role=='user' else 'bot' }}">{{ h.message }}</div>
+    {% endfor %}
+  </div>
+  <div class="suggest">
+    <span onclick="ask(this)">How much did I spend on food?</span>
+    <span onclick="ask(this)">What are my top expenses?</span>
+    <span onclick="ask(this)">How can I save more money?</span>
+    <span onclick="ask(this)">How much went to Amazon?</span>
+  </div>
+  <div class="chat-input">
+    <input id="inp" placeholder="Ask about your finances..." onkeydown="if(event.key==='Enter')send()">
+    <button class="btn" onclick="send()">Send</button>
+  </div>
+</div>
+<script>
+const msgs=document.getElementById('msgs'), inp=document.getElementById('inp');
+function add(t,cls){const d=document.createElement('div');d.className='msg '+cls;d.textContent=t;
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+function ask(el){inp.value=el.textContent;send();}
+async function send(){
+  const text=inp.value.trim(); if(!text)return;
+  add(text,'user'); inp.value='';
+  const wait=add('Thinking…','bot');
+  try{
+    const r=await fetch('{{ url_for("chat_send") }}',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
+    const j=await r.json(); wait.textContent=j.reply;
+  }catch(e){wait.textContent='Sorry, something went wrong.';}
+  msgs.scrollTop=msgs.scrollHeight;
+}
+msgs.scrollTop=msgs.scrollHeight;
+</script>
+{% endblock %}

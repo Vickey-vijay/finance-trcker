@@ -1,0 +1,44 @@
+# ---- Secrets: NEVER commit real API keys ----
+.env
+*.env
+!.env.example
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.pytest_cache/
+
+# ---- Database (runtime data) ----
+*.db
+*.db-journal
+*.sqlite3
+
+# ---- Logs ----
+*.log
+run_out.log
+run_err.log
+
+# ---- Runtime uploads ----
+uploads/
+
+# ---- Node (only used to build docs) ----
+node_modules/
+package-lock.json
+
+# ---- Doc build / QA artifacts (keep final .docx/.pptx/.png, drop temp) ----
+docs/*.pdf
+docs/qa-*.jpg
+docs/rp-*.jpg
+docs/slide-*.jpg
+docs/rdiag/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
