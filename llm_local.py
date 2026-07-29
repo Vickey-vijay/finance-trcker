@@ -5,6 +5,7 @@ short prompts on CPU. Every failure path returns an empty string or False so
 the web application never depends on the model being present, fully
 downloaded, or loadable in the available memory.
 """
+import atexit
 import os
 from pathlib import Path
 
@@ -163,7 +164,19 @@ def status() -> dict:
 
 def unload() -> None:
     global _llm
+    if _llm is not None:
+        try:
+            _llm.close()
+        except Exception:
+            pass
     _llm = None
+
+
+# llama.cpp holds native memory that has to be handed back while the interpreter
+# is still intact. Left to the garbage collector it is freed during shutdown,
+# after the ctypes bindings have already been torn down, which prints an
+# alarming but harmless traceback. Releasing it here keeps process exit clean.
+atexit.register(unload)
 
 
 if __name__ == "__main__":
