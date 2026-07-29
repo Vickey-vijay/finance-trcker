@@ -4,12 +4,14 @@ Flask-SQLAlchemy==3.1.1
 Werkzeug==3.0.3
 SQLAlchemy==2.0.51
 pdfplumber==0.11.4
-pandas==2.2.2
+# Lower bounds rather than exact pins on the compiled packages, so the installer
+# finds a prebuilt wheel whichever recent Python version the client has.
+pandas>=2.2.3,<3
 openpyxl==3.1.5
-numpy==2.5.1
+numpy>=2.0,<3
 python-dotenv==1.0.1
 requests==2.32.3
 
 # Transaction classifier (rule engine plus the character n-gram model)
-scikit-learn==1.9.0
-joblib==1.5.3
+scikit-learn>=1.5,<2
+joblib>=1.4,<2

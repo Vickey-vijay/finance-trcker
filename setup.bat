@@ -19,14 +19,21 @@ echo ============================================================
 echo.
 
 REM --- 1. Locate Python -------------------------------------------------
+REM Nested parentheses behave badly in cmd, so each branch uses a label.
+REM 3.12 is preferred because every dependency ships a prebuilt wheel for it.
 set "PY="
+py -3.12 --version >nul 2>&1
+if not errorlevel 1 set "PY=py -3.12"
+if defined PY goto HAVEPY
 py -3 --version >nul 2>&1
 if not errorlevel 1 set "PY=py -3"
-if not defined PY (
-    python --version >nul 2>&1
-    if not errorlevel 1 set "PY=python"
-)
-if not defined PY goto NOPYTHON
+if defined PY goto HAVEPY
+python --version >nul 2>&1
+if not errorlevel 1 set "PY=python"
+if defined PY goto HAVEPY
+goto NOPYTHON
+
+:HAVEPY
 for /f "delims=" %%v in ('%PY% --version 2^>^&1') do echo Using %%v
 
 REM --- 2. Virtual environment -------------------------------------------
