@@ -1,0 +1,107 @@
+{% extends "app_base.html" %}
+{% set active = 'salary' %}
+{% block title %}Salary &amp; Tax · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>Salary &amp; Tax</h2></div>
+
+<div class="two-col">
+  <div class="card">
+    <h3>Salary profile</h3>
+    <form method="POST">
+      <label>Annual CTC (Rs.)</label>
+      <input type="number" step="1" name="ctc_annual" required
+             value="{{ profile.ctc_annual if profile else '' }}" placeholder="e.g. 1200000">
+      <label>Basic pay (% of CTC)</label>
+      <input type="number" step="1" name="basic_pct"
+             value="{{ (profile.basic_pct * 100) | round(0) if profile else 40 }}">
+      <label>HRA (% of basic)</label>
+      <input type="number" step="1" name="hra_pct"
+             value="{{ (profile.hra_pct * 100) | round(0) if profile else 50 }}">
+      <label>City</label>
+      <select name="metro">
+        <option value="on" {{ 'selected' if profile and profile.metro }}>Metro (Delhi/Mumbai/Chennai/Kolkata)</option>
+        <option value="off" {{ 'selected' if profile and not profile.metro }}>Non-metro</option>
+      </select>
+      <label>Rent paid per month (Rs.)</label>
+      <input type="number" step="1" name="rent_paid_monthly"
+             value="{{ profile.rent_paid_monthly if profile else 0 }}">
+      <label>Other allowances, annual (Rs.)</label>
+      <input type="number" step="1" name="other_allowances"
+             value="{{ profile.other_allowances if profile else 0 }}">
+      <label>Tax regime</label>
+      <select name="regime">
+        <option value="new" {{ 'selected' if not profile or profile.regime=='new' }}>New regime</option>
+        <option value="old" {{ 'selected' if profile and profile.regime=='old' }}>Old regime</option>
+      </select>
+      <label>State</label>
+      <select name="state">
+        {% for s in ["Tamil Nadu","Karnataka","Maharashtra","West Bengal","Andhra Pradesh",
+                     "Telangana","Gujarat","Madhya Pradesh","Delhi","Uttar Pradesh","Kerala","Other"] %}
+        <option value="{{ s }}" {{ 'selected' if profile and profile.state==s }}>{{ s }}</option>
+        {% endfor %}
+      </select>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px">
+        <input type="checkbox" name="pf_opt_in" style="width:auto"
+               {{ 'checked' if not profile or profile.pf_opt_in }}> Opt in to Provident Fund
+      </label>
+      <button class="btn" style="margin-top:18px">Save and calculate</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3>Take-home summary</h3>
+    {% if breakdown %}
+    <table>
+      <tbody>
+        <tr><td>Gross annual</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(breakdown.gross_annual) }}</td></tr>
+        <tr><td>Employee PF</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(breakdown.pf_employee) }}</td></tr>
+        <tr><td>Professional tax</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(breakdown.professional_tax) }}</td></tr>
+        <tr><td>Income tax + cess</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(breakdown.total_tax) }}</td></tr>
+        <tr><td><strong>Net annual</strong></td><td style="text-align:right"><strong>Rs.{{ '{:,.0f}'.format(breakdown.net_annual) }}</strong></td></tr>
+        <tr><td><strong>Net monthly</strong></td><td style="text-align:right"><strong>Rs.{{ '{:,.0f}'.format(breakdown.net_monthly) }}</strong></td></tr>
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">Fill in the salary profile to see your take-home breakdown.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if breakdown %}
+<div class="card" style="margin-top:18px">
+  <h3>Tax slabs applied ({{ breakdown.regime | capitalize }} regime)</h3>
+  <table>
+    <thead><tr><th>Slab</th><th>Rate</th><th style="text-align:right">Tax</th></tr></thead>
+    <tbody>
+      {% for row in breakdown.slab_rows %}
+      <tr><td>{{ row.range }}</td><td>{{ row.rate }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(row.tax) }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if comparison %}
+<div class="card" style="margin-top:18px">
+  <h3>Old vs new regime</h3>
+  <table>
+    <thead><tr><th>Regime</th><th style="text-align:right">Total tax</th><th style="text-align:right">Net annual</th></tr></thead>
+    <tbody>
+      <tr class="{{ 'amt-cr' if comparison.better=='old' }}">
+        <td>Old {{ '(better)' if comparison.better=='old' }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(comparison.old.total_tax) }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(comparison.old.net_annual) }}</td>
+      </tr>
+      <tr class="{{ 'amt-cr' if comparison.better=='new' }}">
+        <td>New {{ '(better)' if comparison.better=='new' }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(comparison.new.total_tax) }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(comparison.new.net_annual) }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="muted" style="margin-top:10px">The {{ comparison.better }} regime saves you
+     Rs.{{ '{:,.0f}'.format(comparison.saving) }} a year at this income.</p>
+</div>
+{% endif %}
+{% endblock %}

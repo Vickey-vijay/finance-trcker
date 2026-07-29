@@ -1,0 +1,63 @@
+{% extends "app_base.html" %}
+{% set active = 'goals' %}
+{% block title %}Goals · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h2>Savings Goals</h2>
+  <span class="pill">Monthly surplus: Rs.{{ '{:,.0f}'.format(monthly_surplus) }}</span>
+</div>
+
+<div class="card" style="max-width:560px">
+  <h3>New goal</h3>
+  <form method="POST">
+    <label>Goal name</label>
+    <input type="text" name="name" required placeholder="e.g. Emergency fund">
+    <label>Target amount (Rs.)</label>
+    <input type="number" step="1" name="target_amount" required placeholder="e.g. 200000">
+    <label>Target date</label>
+    <input type="date" name="target_date" required>
+    <button class="btn" style="margin-top:18px">Add goal</button>
+  </form>
+</div>
+
+<div class="grid cards" style="margin-top:18px">
+  {% for g in goals %}
+  {% set p = projections[g.id] %}
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin-bottom:0">{{ g.name }}</h3>
+      <span class="tag {{ 'warn' if not p.on_track }}">{{ 'On track' if p.on_track else 'Behind' }}</span>
+    </div>
+    <p class="muted" style="margin-top:6px">Target Rs.{{ '{:,.0f}'.format(g.target_amount) }}
+       by {{ g.target_date }}</p>
+    <div style="margin-top:10px">
+      <div class="progress-track"><div class="progress-fill" style="width:{{ p.pct_complete }}%"></div></div>
+      <div class="muted" style="font-size:12px;margin-top:4px">{{ '{:.0f}'.format(p.pct_complete) }}% saved
+        · {{ p.months_left }} month(s) left</div>
+    </div>
+    <table style="margin-top:12px">
+      <tbody>
+        <tr><td>Saved so far</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(g.saved_amount) }}</td></tr>
+        <tr><td>Required per month</td><td style="text-align:right">Rs.{{ '{:,.0f}'.format(p.required_monthly) }}</td></tr>
+        {% if not p.on_track %}
+        <tr><td>Shortfall per month</td><td style="text-align:right" class="amt-dr">Rs.{{ '{:,.0f}'.format(p.shortfall_monthly) }}</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+    <form method="POST" action="{{ url_for('update_goal_savings', goal_id=g.id) }}"
+          style="display:flex;gap:8px;margin-top:12px;align-items:flex-end">
+      <div style="flex:1"><label>Update saved amount</label>
+        <input type="number" step="1" name="saved_amount" value="{{ g.saved_amount }}"></div>
+      <button class="btn small secondary">Update</button>
+    </form>
+    <form method="POST" action="{{ url_for('delete_goal', goal_id=g.id) }}"
+          onsubmit="return confirm('Delete this goal?')" style="margin-top:8px">
+      <button class="btn small danger">Delete goal</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="empty" style="grid-column:1/-1"><div class="big">◎</div>No savings goals yet.
+    Add one above to start tracking progress.</div>
+  {% endfor %}
+</div>
+{% endblock %}

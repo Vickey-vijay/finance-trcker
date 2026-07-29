@@ -1,0 +1,86 @@
+{% extends "app_base.html" %}
+{% set active = 'insights' %}
+{% block title %}Insights · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>Insights</h2></div>
+
+<div class="card">
+  <h3>Spending insights</h3>
+  {% if spending_insights %}
+  <div class="insight-strip">
+    {% for i in spending_insights %}
+    <div class="insight-item {{ i.severity }}">
+      <div class="insight-title">{{ i.title }}</div>
+      <div class="insight-detail muted">{{ i.detail }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted">Nothing to flag yet — upload a statement to see insights.</p>
+  {% endif %}
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <h3>Recurring subscriptions</h3>
+    {% if subscriptions %}
+    <table>
+      <thead><tr><th>Merchant</th><th style="text-align:right">Amount</th>
+        <th>Cadence</th><th style="text-align:right">Annual cost</th></tr></thead>
+      <tbody>
+        {% for s in subscriptions %}
+        <tr>
+          <td>{{ s.merchant }}</td>
+          <td style="text-align:right">Rs.{{ '{:,.0f}'.format(s.amount) }}</td>
+          <td class="muted">{{ s.cadence }}</td>
+          <td style="text-align:right">Rs.{{ '{:,.0f}'.format(s.annual_cost) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No recurring charges detected.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h3>Top merchants</h3>
+    {% if top_merchants %}
+    <table>
+      <thead><tr><th>Merchant</th><th style="text-align:right">Total</th><th style="text-align:right">Count</th></tr></thead>
+      <tbody>
+        {% for name, amount, count in top_merchants %}
+        <tr><td>{{ name }}</td>
+          <td style="text-align:right">Rs.{{ '{:,.0f}'.format(amount) }}</td>
+          <td style="text-align:right">{{ count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No transactions yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h3>Month over month</h3>
+  {% if month_over_month %}
+  <table>
+    <thead><tr><th>Month</th><th style="text-align:right">Income</th>
+      <th style="text-align:right">Expense</th><th style="text-align:right">Savings</th></tr></thead>
+    <tbody>
+      {% for m in month_over_month %}
+      <tr>
+        <td>{{ m.label }}</td>
+        <td style="text-align:right" class="amt-cr">Rs.{{ '{:,.0f}'.format(m.income) }}</td>
+        <td style="text-align:right" class="amt-dr">Rs.{{ '{:,.0f}'.format(m.expense) }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(m.savings) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Not enough history yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

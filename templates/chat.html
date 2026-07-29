@@ -14,6 +14,15 @@
       <div class="msg {{ 'user' if h.role=='user' else 'bot' }}">{{ h.message }}</div>
     {% endfor %}
   </div>
+  <template id="sourceTpl">
+    <div class="msg-sources">
+      <span class="engine-label"></span>
+      <details class="sources-toggle">
+        <summary>Sources</summary>
+        <ul class="sources-list"></ul>
+      </details>
+    </div>
+  </template>
   <div class="suggest">
     <span onclick="ask(this)">How much did I spend on food?</span>
     <span onclick="ask(this)">What are my top expenses?</span>
@@ -29,6 +38,28 @@
 const msgs=document.getElementById('msgs'), inp=document.getElementById('inp');
 function add(t,cls){const d=document.createElement('div');d.className='msg '+cls;d.textContent=t;
   msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+function addSources(engine, sources){
+  if(!engine && !(sources && sources.length)) return;
+  const tpl=document.getElementById('sourceTpl');
+  const node=tpl.content.cloneNode(true);
+  if(engine){
+    node.querySelector('.engine-label').textContent=engine;
+  }
+  const toggle=node.querySelector('.sources-toggle');
+  const list=node.querySelector('.sources-list');
+  if(sources && sources.length){
+    sources.forEach(s=>{
+      const li=document.createElement('li');
+      li.textContent=(s.date||'')+' — '+(s.description||'')+' — Rs.'+
+        (s.amount!=null?Math.round(s.amount).toLocaleString('en-IN'):'');
+      list.appendChild(li);
+    });
+  } else {
+    toggle.remove();
+  }
+  msgs.appendChild(node);
+  msgs.scrollTop=msgs.scrollHeight;
+}
 function ask(el){inp.value=el.textContent;send();}
 async function send(){
   const text=inp.value.trim(); if(!text)return;
@@ -38,6 +69,7 @@ async function send(){
     const r=await fetch('{{ url_for("chat_send") }}',{method:'POST',
       headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
     const j=await r.json(); wait.textContent=j.reply;
+    addSources(j.engine, j.sources);
   }catch(e){wait.textContent='Sorry, something went wrong.';}
   msgs.scrollTop=msgs.scrollHeight;
 }

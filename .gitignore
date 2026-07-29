@@ -42,3 +42,15 @@ docs/rdiag/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---- Local quantised model (downloaded by setup, ~1 GB) ----
+models/
+*.gguf
+*.gguf.part
+
+# ---- Session signing key (generated per install) ----
+.secret_key
+
+# ---- Test scratch ----
+.pytest_cache/
+tests/__pycache__/

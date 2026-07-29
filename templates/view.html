@@ -7,6 +7,7 @@
   <div>
     <span class="pill" style="background:#e7f6ee;color:#11663d">In: Rs.{{ '{:,.0f}'.format(total_in) }}</span>
     <span class="pill" style="background:#fdeaea;color:#a02020">Out: Rs.{{ '{:,.0f}'.format(total_out) }}</span>
+    <a class="btn small secondary" href="{{ url_for('export_csv') }}">Export CSV</a>
   </div>
 </div>
 
@@ -26,19 +27,31 @@
       <option value="debit" {{ 'selected' if sel_type=='debit' }}>Debit</option>
     </select>
   </div>
+  <div>
+    <label>Search</label>
+    <input type="text" name="q" value="{{ search }}" placeholder="Search description..."
+           style="width:220px">
+  </div>
+  <div><button class="btn small secondary" type="submit">Filter</button></div>
   <div><a class="btn small secondary" href="{{ url_for('view') }}">Reset</a></div>
 </form>
 
 <div class="card">
   {% if txns %}
   <table>
-    <thead><tr><th>Date</th><th>Description</th><th>Method</th><th>Category</th>
+    <thead><tr><th>Date</th><th>Description</th><th>Merchant</th><th>Method</th><th>Category</th>
       <th style="text-align:right">Amount</th><th></th></tr></thead>
     <tbody>
       {% for t in txns %}
-      <tr>
+      <tr class="{{ 'low-confidence' if t.confidence is not none and t.confidence < 0.6 }}">
         <td>{{ t.date }}</td>
         <td>{{ t.description }}</td>
+        <td class="muted">
+          {{ t.merchant or '—' }}
+          {% if t.confidence is not none and t.confidence < 0.6 %}
+          <span class="tag warn" title="Low-confidence category — please check">check</span>
+          {% endif %}
+        </td>
         <td class="muted">{{ t.method }}</td>
         <td>
           <form method="POST" action="{{ url_for('update_category', txn_id=t.id) }}">

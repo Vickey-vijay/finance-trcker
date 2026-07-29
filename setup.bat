@@ -1,83 +1,111 @@
 @echo off
 REM ============================================================
-REM   SmartEdit AI  -  One-click Setup (Windows)
-REM   Creates a virtual environment, installs dependencies,
-REM   and prepares a .env file (WITHOUT any API key).
+REM   SmartEdit AI  -  one-click setup for Windows
+REM   Installs everything the application needs. Nothing else
+REM   has to be configured afterwards.
 REM ============================================================
 setlocal
 cd /d "%~dp0"
+title SmartEdit AI - Setup
 
 echo.
 echo ============================================================
-echo    SmartEdit AI  -  Setup
+echo    SmartEdit AI - Setup
+echo.
+echo    This installs the application and its on-device AI.
+echo    It downloads about 1.5 GB the first time, so it can
+echo    take a few minutes. You only need to do this once.
 echo ============================================================
 echo.
 
-REM --- 1. Check Python is installed ---
-python --version >nul 2>&1
-if errorlevel 1 goto NOPYTHON
-for /f "delims=" %%v in ('python --version') do echo Found %%v
+REM --- 1. Locate Python -------------------------------------------------
+set "PY="
+py -3 --version >nul 2>&1
+if not errorlevel 1 set "PY=py -3"
+if not defined PY (
+    python --version >nul 2>&1
+    if not errorlevel 1 set "PY=python"
+)
+if not defined PY goto NOPYTHON
+for /f "delims=" %%v in ('%PY% --version 2^>^&1') do echo Using %%v
 
-REM --- 2. Create virtual environment ---
-if exist ".venv\Scripts\activate.bat" goto HAVEVENV
-echo Creating virtual environment .venv ...
-python -m venv .venv
+REM --- 2. Virtual environment -------------------------------------------
+if exist ".venv\Scripts\python.exe" goto HAVEVENV
+echo Creating the application environment ...
+%PY% -m venv .venv
 if errorlevel 1 goto VENVFAIL
 :HAVEVENV
+set "VPY=.venv\Scripts\python.exe"
 
-REM --- 3. Activate and install dependencies ---
-call ".venv\Scripts\activate.bat"
-echo Upgrading pip ...
-python -m pip install --upgrade pip >nul
-echo Installing core dependencies. This may take a few minutes ...
-pip install -r requirements.txt
+REM --- 3. Core libraries -------------------------------------------------
+echo.
+echo Installing core components ...
+"%VPY%" -m pip install --upgrade pip --quiet --disable-pip-version-check
+"%VPY%" -m pip install -r requirements.txt --quiet --disable-pip-version-check
 if errorlevel 1 goto PIPFAIL
 
-REM --- 4. Optional: local semantic RAG (large download) ---
-echo.
-choice /c YN /m "Install OPTIONAL local RAG engine - large PyTorch download"
-if errorlevel 2 goto SKIPRAG
-echo Installing optional RAG dependencies ...
-pip install -r requirements-optional.txt
-:SKIPRAG
+REM --- 4. On-device AI ---------------------------------------------------
+REM Both come from prebuilt CPU wheels, so no compiler is required.
+echo Installing the on-device AI engine ...
+"%VPY%" -m pip install --only-binary=:all: llama-cpp-python==0.3.34 ^
+    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu ^
+    --quiet --disable-pip-version-check
+if errorlevel 1 echo    (skipped - the built-in advisor will be used instead)
 
-REM --- 5. Create .env from template (NO API key inside) ---
-if exist ".env" goto HAVEENV
-copy ".env.example" ".env" >nul
-echo.
-echo Created .env from template.
-echo    IMPORTANT: open .env and paste your GEMINI_API_KEY, then save.
-goto DONE
-:HAVEENV
-echo .env already exists - leaving it untouched.
+echo Installing the search engine used by the assistant ...
+"%VPY%" -m pip install torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu ^
+    --quiet --disable-pip-version-check
+if errorlevel 1 echo    (skipped - keyword search will be used instead)
+"%VPY%" -m pip install sentence-transformers==5.1.2 --quiet --disable-pip-version-check
+if errorlevel 1 echo    (skipped - keyword search will be used instead)
 
-:DONE
+REM --- 5. Models, settings and database ---------------------------------
+echo.
+"%VPY%" tools\first_run_setup.py
+if errorlevel 1 goto PREPFAIL
+
 echo.
 echo ============================================================
-echo   Setup complete!
-echo   1. Open .env and add your GEMINI_API_KEY
-echo   2. Double-click run.bat to start the app
+echo   Setup complete.
+echo   Double-click  run.bat  to start SmartEdit AI.
 echo ============================================================
 echo.
 pause
 exit /b 0
 
 :NOPYTHON
-echo [ERROR] Python was not found on this system.
-echo Install Python 3.12 from https://www.python.org/downloads/
-echo During install, TICK "Add python.exe to PATH", then run setup.bat again.
+echo.
+echo [Setup cannot continue] Python is not installed on this computer.
+echo.
+echo   1. Go to https://www.python.org/downloads/
+echo   2. Download Python 3.12 and run the installer
+echo   3. On the first screen, tick "Add python.exe to PATH"
+echo   4. Once it finishes, double-click setup.bat again
 echo.
 pause
 exit /b 1
 
 :VENVFAIL
-echo [ERROR] Could not create the virtual environment.
+echo.
+echo [Setup cannot continue] The application environment could not be created.
+echo Check that you have permission to write to this folder.
 echo.
 pause
 exit /b 1
 
 :PIPFAIL
-echo [ERROR] Dependency installation failed. Check your internet connection.
+echo.
+echo [Setup cannot continue] The core components could not be installed.
+echo Check your internet connection and run setup.bat again.
 echo.
 pause
 exit /b 1
+
+:PREPFAIL
+echo.
+echo [Setup finished with warnings] Some optional components are missing.
+echo SmartEdit AI will still start and work. Run setup.bat again later
+echo to complete them.
+echo.
+pause
+exit /b 0

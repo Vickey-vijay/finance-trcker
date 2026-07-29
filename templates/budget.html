@@ -1,0 +1,46 @@
+{% extends "app_base.html" %}
+{% set active = 'budget' %}
+{% block title %}Budget · SmartEdit AI{% endblock %}
+{% block content %}
+<div class="topbar"><h2>Monthly Budget</h2></div>
+
+<div class="card" style="max-width:480px">
+  <h3>Set a category limit</h3>
+  <form method="POST">
+    <label>Category</label>
+    <select name="category" required>
+      {% for c in categories %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    <label>Monthly limit (Rs.)</label>
+    <input type="number" step="1" name="monthly_limit" required placeholder="e.g. 5000">
+    <button class="btn" style="margin-top:18px">Save budget</button>
+  </form>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h3>Budget status this month</h3>
+  {% if status %}
+  <table>
+    <thead><tr><th>Category</th><th style="text-align:right">Limit</th>
+      <th style="text-align:right">Spent</th><th style="text-align:right">Used</th></tr></thead>
+    <tbody>
+      {% for row in status %}
+      <tr>
+        <td>{{ row.category }}</td>
+        <td style="text-align:right">Rs.{{ '{:,.0f}'.format(row.limit) }}</td>
+        <td style="text-align:right" class="{{ 'amt-dr' if row.over else '' }}">Rs.{{ '{:,.0f}'.format(row.spent) }}</td>
+        <td style="text-align:right">
+          <div class="progress-track" style="display:inline-block;width:90px;vertical-align:middle">
+            <div class="progress-fill {{ 'over' if row.over }}" style="width:{{ [row.pct, 100] | min }}%"></div>
+          </div>
+          <span class="muted" style="font-size:12px">{{ '{:.0f}'.format(row.pct) }}%</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty"><div class="big">▣</div>No budgets set yet. Add a category limit above.</div>
+  {% endif %}
+</div>
+{% endblock %}

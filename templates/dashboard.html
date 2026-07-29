@@ -43,6 +43,29 @@
   </div>
 </div>
 
+<div class="two-col">
+  <div class="card">
+    <h3>Income vs expense trend</h3>
+    <canvas id="trendChart" height="220"></canvas>
+  </div>
+  <div class="card">
+    <h3>Insights</h3>
+    {% if insights %}
+    <div class="insight-strip">
+      {% for i in insights %}
+      <div class="insight-item {{ i.severity }}">
+        <div class="insight-title">{{ i.title }}</div>
+        <div class="insight-detail muted">{{ i.detail }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">Nothing to flag this month.</p>
+    {% endif %}
+    <a href="{{ url_for('insights') }}" class="hint" style="display:block;margin-top:10px">See all insights →</a>
+  </div>
+</div>
+
 <div class="card" style="margin-top:18px">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <h3>Recent transactions</h3>
@@ -75,6 +98,17 @@ new Chart(document.getElementById('catChart'), {
     backgroundColor:['#1a73e8','#34a853','#fbbc04','#ea4335','#9b59b6','#00acc1',
                      '#ff7043','#5c6bc0','#26a69a','#ec407a','#8d6e63','#789262']}]},
   options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:12}}}}}
+});
+
+const trend = {{ trend_chart | tojson }};
+new Chart(document.getElementById('trendChart'), {
+  type:'line',
+  data:{labels:trend.labels,datasets:[
+    {label:'Income',data:trend.income,borderColor:'#1aa260',backgroundColor:'rgba(26,162,96,.12)',tension:.3,fill:true},
+    {label:'Expense',data:trend.expense,borderColor:'#e03e3e',backgroundColor:'rgba(224,62,62,.10)',tension:.3,fill:true}
+  ]},
+  options:{plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:12}}}},
+    scales:{y:{ticks:{callback:v=>'Rs.'+v.toLocaleString('en-IN')}}}}
 });
 </script>
 {% endif %}

@@ -11,6 +11,10 @@
       <a href="{{ url_for('add') }}" class="{{ 'active' if active=='add' }}"><span class="ico">＋</span> Add Entry</a>
       <a href="{{ url_for('view') }}" class="{{ 'active' if active=='view' }}"><span class="ico">▤</span> View / Database</a>
       <a href="{{ url_for('tracker') }}" class="{{ 'active' if active=='tracker' }}"><span class="ico">📈</span> Tracker</a>
+      <a href="{{ url_for('salary_page') }}" class="{{ 'active' if active=='salary' }}"><span class="ico">₹</span> Salary &amp; Tax</a>
+      <a href="{{ url_for('goals') }}" class="{{ 'active' if active=='goals' }}"><span class="ico">◎</span> Goals</a>
+      <a href="{{ url_for('budget') }}" class="{{ 'active' if active=='budget' }}"><span class="ico">▣</span> Budget</a>
+      <a href="{{ url_for('insights') }}" class="{{ 'active' if active=='insights' }}"><span class="ico">✦</span> Insights</a>
       <a href="{{ url_for('chat') }}" class="{{ 'active' if active=='chat' }}"><span class="ico">💬</span> AI Chat</a>
     </nav>
     <div class="foot">

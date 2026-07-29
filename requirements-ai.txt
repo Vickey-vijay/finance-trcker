@@ -1,0 +1,12 @@
+# On-device AI stack. Installed by setup.bat from dedicated wheel indexes so
+# that no build tools are needed on the user's machine:
+#
+#   llama-cpp-python  -> https://abetlen.github.io/llama-cpp-python/whl/cpu
+#   torch             -> https://download.pytorch.org/whl/cpu
+#
+# llama-cpp-python runs the quantized GGUF language model on the CPU.
+# sentence-transformers produces the 384-dimension transaction embeddings used
+# by the retrieval step of the chatbot.
+llama-cpp-python==0.3.34
+torch==2.9.1
+sentence-transformers==5.1.2
