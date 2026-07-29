@@ -54,3 +54,6 @@ models/
 # ---- Test scratch ----
 .pytest_cache/
 tests/__pycache__/
+
+# ---- Office lock files ----
+~$*

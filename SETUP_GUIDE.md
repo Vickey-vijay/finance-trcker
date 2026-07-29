@@ -1,22 +1,24 @@
-# SmartEdit AI — Setup Guide (Client VM)
+# SmartEdit AI — Setup Guide (Windows)
 
-This guide gets SmartEdit AI running on a fresh Windows machine in a few minutes.
+This gets SmartEdit AI running on a fresh Windows machine. There is no account to
+create, no API key to obtain, and no cloud service involved.
 
 ---
 
-## 1. Prerequisites (install once)
+## 1. Prerequisite: Python
 
-You only need **Python**. The app is 100% Python — **Node.js is NOT required** to run it.
+Python is the only thing you need to install yourself. Node.js is not required to
+run the application.
 
 | Software | Version | Why |
 |----------|---------|-----|
 | **Python** | **3.12.x** (tested on 3.12.10) | Runs the whole application |
-| Git (optional) | latest | Only if cloning from GitHub instead of ZIP |
+| Git (optional) | latest | Only if cloning instead of downloading a ZIP |
 
-### Install Python — pick ONE method
+### Install Python — pick one
 
-**A. Command line (fastest, Windows 10/11):**
-Open **Command Prompt** or **PowerShell as Administrator** and run:
+**A. Command line (Windows 10/11):** open Command Prompt or PowerShell **as
+Administrator** and run:
 
 ```
 winget install -e --id Python.Python.3.12
@@ -24,32 +26,30 @@ winget install -e --id Python.Python.3.12
 
 Close and reopen the terminal afterwards so `python` is on PATH.
 
-**B. Manual download:**
-Get Python 3.12.10 from
-https://www.python.org/downloads/release/python-31210/
-Run the installer and **tick “Add python.exe to PATH”** on the first screen.
+**B. Manual download:** get Python 3.12.10 from
+https://www.python.org/downloads/release/python-31210/ and **tick "Add python.exe
+to PATH"** on the installer's first screen.
 
-**Verify:**
+Verify with:
+
 ```
 python --version
 ```
-You should see `Python 3.12.x`.
 
-*(Optional)* Install Git if you plan to `git clone`:
-```
-winget install -e --id Git.Git
-```
+You should see `Python 3.12.x`.
 
 ---
 
 ## 2. Get the project
 
-**Option A — ZIP (recommended for the client):**
-1. Go to the GitHub repo.
-2. Click the green **`<> Code`** button → **Download ZIP**.
-3. Right-click the ZIP → **Extract All…** to a folder like `C:\SmartEditAI`.
+**Option A — ZIP:**
+1. Open the GitHub repository.
+2. Click the green **`<> Code`** button, then **Download ZIP**.
+3. Right-click the ZIP, choose **Extract All…**, and extract to a short path such
+   as `C:\SmartEditAI`. Do not run anything from inside the ZIP itself.
 
 **Option B — Git clone:**
+
 ```
 git clone https://github.com/Vickey-vijay/finance-trcker.git
 ```
@@ -58,66 +58,87 @@ git clone https://github.com/Vickey-vijay/finance-trcker.git
 
 ## 3. One-click setup
 
-Inside the extracted folder, **double-click `setup.bat`**.
+Inside the folder, **double-click `setup.bat`** and leave it running.
 
 It will:
-1. Check Python is installed.
-2. Create a virtual environment (`.venv`).
-3. Install the core dependencies.
-4. Offer to install the optional local RAG engine (large PyTorch download — you can skip it).
-5. Create a `.env` file from the template (**no API key inside**).
+1. Find Python and create a private environment (`.venv`) for the application.
+2. Install the core components.
+3. Install the on-device AI engine from prebuilt packages, so no compiler or
+   build tools are needed.
+4. Download the language model that runs on this machine, showing a progress bar.
+5. Prepare the settings file, the transaction classifier and the database.
 
-> Prefer the command line? From the project folder:
-> ```
-> setup.bat
-> ```
+**This downloads about 1.5 GB once**, most of it the language model, so allow a
+few minutes on a reasonable connection. Every later run starts instantly.
 
----
-
-## 4. Add your Gemini API key
-
-1. Open the newly created **`.env`** file in Notepad.
-2. Find this line and paste your key after the `=`:
-   ```
-   GEMINI_API_KEY=your_key_here
-   ```
-   (Get a free key at https://aistudio.google.com/app/apikey)
-3. Save and close.
-
-> If you leave the key blank, the app still runs using the built-in **offline
-> fallback** advisor and chat — nothing crashes, you just don’t get Gemini’s
-> natural-language answers.
+If any optional component cannot be installed, setup says so and continues. The
+application still works — it simply uses its built-in advisor and keyword search
+instead of the on-device model.
 
 ---
 
-## 5. Run the app
+## 4. Run the app
 
-**Double-click `run.bat`** (or run `run.bat` from the terminal).
+**Double-click `run.bat`.**
 
-- It starts the server and opens **http://127.0.0.1:5000** in your browser.
-- Keep the black window open while using the app.
-- To stop: press **Ctrl + C** in that window, or just close it.
-
----
-
-## 6. First use
-
-1. Click **Create an account** and register.
-2. On the empty dashboard, upload **one month** of a bank statement — try the
-   included `sample_data/sample_statement.csv` first.
-3. Explore **Dashboard → View/Database → Tracker → AI Chat**.
-4. In chat, ask e.g. *“How much did I spend on Amazon?”* or *“How can I save more?”*
+- The server starts and your browser opens at **http://127.0.0.1:5000**.
+- Keep the black window open while you use the app.
+- To stop, press **Ctrl + C** in that window, or close it.
 
 ---
 
-## 7. Switching to a fully local AI (later)
+## 5. First use
 
-To run with no cloud at all, install **Ollama** (https://ollama.com), then in `.env`:
-```
-LLM_PROVIDER=ollama
-OLLAMA_MODEL=llama3
-```
-Pull the model once with `ollama pull llama3`, then `run.bat`. No other change needed.
+1. Click **Create an account** and register. The account exists only on this
+   machine.
+2. On the empty dashboard, upload a statement. Start with the included
+   `sample_data/sample_statement.csv`, or try `hdfc_statement.csv`,
+   `icici_statement.csv` or `axis_statement.csv` to see different bank layouts
+   being read.
+3. Work through **Dashboard → View/Database → Tracker → Insights**.
+4. Enter your CTC on **Salary & Tax** to see your take-home and a comparison of
+   the two tax regimes.
+5. On **AI Chat**, try:
+   - *How much did I spend on groceries in June?*
+   - *What are my subscriptions?*
+   - *What was my biggest expense?*
+   - *Compare last month with this month*
+   - *How can I save money?*
+
+---
+
+## 6. Settings
+
+Settings live in `.env`, which setup creates for you. You do not need to edit it.
+
+`LLM_PROVIDER` controls how answers are worded:
+
+| Value | Behaviour |
+|-------|-----------|
+| `local` (default) | Quantised Qwen2.5 1.5B model on your own CPU. Nothing leaves the machine. |
+| `ollama` | Use a model served by a local Ollama instance. |
+| `gemini` | Use the Gemini API. Requires your own key in `GEMINI_API_KEY`. |
+| `fallback` | No language model at all. Answers and advice still work. |
+
+The figures in every answer are computed from your transactions by the
+application itself, not by the language model, so they are the same whichever
+provider is selected. Only the phrasing changes.
+
+To keep the data file somewhere else, set `SMARTEDIT_DATABASE_URI`, for example
+`sqlite:///D:/finance/smartedit.db`.
+
+---
+
+## 7. Where your data lives
+
+Everything stays on this computer:
+
+- `smartedit.db` — your transactions, salary profile, goals and chat history
+- `models/` — the downloaded language model
+- `uploads/` — statements you have uploaded
+
+To start completely fresh, close the app and delete `smartedit.db`. It is
+recreated empty on the next launch.
 
 ---
 
@@ -125,8 +146,10 @@ Pull the model once with `ollama pull llama3`, then `run.bat`. No other change n
 
 | Problem | Fix |
 |--------|-----|
-| `'python' is not recognized` | Python not on PATH — reinstall and tick “Add to PATH”, reopen terminal. |
-| `setup.bat` closes instantly | Run it from a terminal to read the error, or ensure you extracted the ZIP (don’t run from inside the zip). |
-| Port 5000 already in use | Close the old window, or edit the last line of `app.py` to use another port. |
-| Chat gives short answers | Add your `GEMINI_API_KEY` to `.env`, then restart `run.bat`. |
-| Want semantic RAG | `pip install -r requirements-optional.txt` inside the activated `.venv`. |
+| `'python' is not recognized` | Python is not on PATH. Reinstall and tick "Add python.exe to PATH", then reopen the terminal. |
+| `setup.bat` closes instantly | Run it from a terminal to read the message, and make sure you extracted the ZIP rather than running from inside it. |
+| Setup says the model could not be downloaded | Re-run `setup.bat`; it resumes and skips whatever is already done. The app works in the meantime. |
+| Port 5000 already in use | Close the other copy of the app, or change the port on the last line of `app.py`. |
+| A statement will not import | Check it is a CSV, Excel or PDF exported from your bank. Scanned image PDFs cannot be read. If the PDF is password protected, the app will ask for the password. |
+| Charts are blank | Do a hard refresh with Ctrl + F5. Chart.js is served from the application, so no internet is needed. |
+| Answers are short and plain | The on-device model is not installed or not downloaded. Re-run `setup.bat`. Figures stay correct either way. |
