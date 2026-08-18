@@ -1,5 +1,5 @@
 // SmartEdit AI — Final Knowledge Transfer Guide (docx-js)
-// Owned exclusively by this script. Do not merge with make_kt.js.
+// Builds SmartEditAI_KT_Guide.docx, the handover document for the final semester.
 const fs = require("fs");
 const path = require("path");
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, ImageRun,
