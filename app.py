@@ -232,12 +232,20 @@ def add():
         desc = request.form.get("description", "").strip() or "Manual entry"
         txn_type = request.form.get("txn_type", "debit")
         d = request.form.get("date")
+        if d:
+            try:
+                txn_date = datetime.strptime(d, "%Y-%m-%d").date()
+            except ValueError:
+                flash("Enter a valid date.", "error")
+                return redirect(url_for("add"))
+        else:
+            txn_date = date.today()
         category = request.form.get("category", "").strip()
         if not category:
             category = classifier.classify(desc, txn_type)
         txn = Transaction(
             user_id=uid,
-            date=datetime.strptime(d, "%Y-%m-%d").date() if d else date.today(),
+            date=txn_date,
             description=desc, raw_description=desc, amount=amount,
             txn_type=txn_type, category=category, confidence=1.0,
             merchant=classifier.merchant_name(desc),
@@ -404,8 +412,13 @@ def goals():
             flash("Enter a valid target amount.", "error")
             return redirect(url_for("goals"))
         target_date_raw = request.form.get("target_date")
-        target_date = (datetime.strptime(target_date_raw, "%Y-%m-%d").date()
-                       if target_date_raw else None)
+        target_date = None
+        if target_date_raw:
+            try:
+                target_date = datetime.strptime(target_date_raw, "%Y-%m-%d").date()
+            except ValueError:
+                flash("Enter a valid target date.", "error")
+                return redirect(url_for("goals"))
         if not name or not target_date:
             flash("A goal needs a name and a target date.", "error")
             return redirect(url_for("goals"))
@@ -531,4 +544,12 @@ def inject_globals():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    # use_reloader=False avoids the reloader's parent/child process pair,
+    # which on Windows makes Ctrl+C delivery to the console unpredictable.
+    # Catching KeyboardInterrupt here means a deliberate Ctrl+C exits with
+    # code 0 instead of STATUS_CONTROL_C_EXIT, so cmd.exe does not treat a
+    # normal shutdown as a broken batch job (see run.bat).
+    try:
+        app.run(debug=False, port=5000, use_reloader=False)
+    except KeyboardInterrupt:
+        pass

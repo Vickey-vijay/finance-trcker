@@ -19,8 +19,9 @@ echo    Press Ctrl+C here when you want to stop it.
 echo ============================================================
 echo.
 
-REM Give the server a moment to bind the port, then open the browser.
-start "" /min cmd /c "timeout /t 4 >nul & start http://127.0.0.1:5000"
+REM Open the browser once the server actually answers, rather than after a
+REM fixed delay that can be shorter than the app's real startup time.
+start "" /min "%~dp0tools\open_browser.bat"
 
 ".venv\Scripts\python.exe" app.py
 if errorlevel 1 goto CRASHED

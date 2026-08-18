@@ -29,11 +29,14 @@ def create_env_file():
     if not os.path.exists(template):
         print("      Settings template missing; using built-in defaults.")
         return
-    with open(template, encoding="utf8") as src:
-        content = src.read()
-    with open(env_path, "w", encoding="utf8") as dst:
-        dst.write(content)
-    print("      Settings file created.")
+    try:
+        with open(template, encoding="utf8") as src:
+            content = src.read()
+        with open(env_path, "w", encoding="utf8") as dst:
+            dst.write(content)
+        print("      Settings file created.")
+    except OSError as exc:
+        print(f"      Could not write .env ({exc}); using built-in defaults.")
 
 
 def fetch_language_model():
@@ -108,16 +111,24 @@ def main():
     print("=" * 60)
     print("  SmartEdit AI - preparing your installation")
     print("=" * 60)
-    step(1, "Settings file")
-    create_env_file()
-    step(2, "On-device language model")
-    fetch_language_model()
-    step(3, "Transaction embedding model")
-    cache_embedding_model()
-    step(4, "Transaction classifier")
-    prepare_classifier()
-    step(5, "Database")
-    prepare_database()
+    # Each step already handles its own expected failures (missing optional
+    # dependency, no network, and so on) and prints a one-line status. This
+    # try/except is a backstop for anything unexpected, so one bad step -
+    # for example a locked settings file - can never stop the remaining
+    # steps from running.
+    steps = [
+        (1, "Settings file", create_env_file),
+        (2, "On-device language model", fetch_language_model),
+        (3, "Transaction embedding model", cache_embedding_model),
+        (4, "Transaction classifier", prepare_classifier),
+        (5, "Database", prepare_database),
+    ]
+    for number, title, action in steps:
+        step(number, title)
+        try:
+            action()
+        except Exception as exc:
+            print(f"      Unexpected error, skipping this step ({exc}).")
     print("\n" + "=" * 60)
     print("  Ready. Close this window and double-click run.bat")
     print("=" * 60)
