@@ -142,6 +142,33 @@ def test_an_unanswerable_question_says_so_rather_than_guessing(seeded):
     assert "Rs." not in reply or "could not" in reply.lower()
 
 
+@pytest.mark.parametrize("question", [
+    "what is the capital of France",
+    "who won the world cup",
+    "tell me a joke",
+    "what is the weather today",
+])
+def test_a_question_that_is_not_about_money_is_refused(seeded, question):
+    """Retrieval always returns its nearest rows, so a question the assistant
+    cannot answer must be refused outright rather than answered with a list of
+    unrelated transactions. "today" also has to be caught, because the date
+    parser recognises it even though the question is not about money."""
+    reply = rag.answer(seeded.id, question, today=TODAY)
+    assert "could not" in reply.lower()
+    assert "Rs." not in reply
+
+
+def test_every_figure_in_a_retrieved_answer_is_declared(seeded):
+    """The semantic path must report the figures it is allowed to quote, so the
+    same grounding check applies whichever path produced the answer."""
+    import re
+    detail = rag.answer_detailed(seeded.id, "what did I buy recently", today=TODAY)
+    allowed = {round(float(v)) for v in detail["numbers"].values()
+               if isinstance(v, (int, float))}
+    for figure in re.findall(r"Rs\.?\s?([\d,]+)", detail["reply"]):
+        assert round(float(figure.replace(",", ""))) in allowed
+
+
 def test_the_guard_rejects_an_invented_figure():
     """A reply quoting a rupee amount that was never computed must be refused."""
     accepted, reason = rag._check_llm_reply("You spent Rs.99,999 on food.", {"total": 4280})

@@ -372,8 +372,16 @@ def _advice_response(user_id, spec):
     grounded = advisor.rule_based_advice(summary, user_id=user_id)
     reply = advisor.generate_advice(summary, user_id=user_id)
     engine = "rules" if reply == grounded else "sql+llm"
+    # The month's own totals, reported so a caller can check them the same way
+    # it checks any other answer. Figures the advice derives from these, such as
+    # an annualised standing charge, stay the responsibility of the guard above.
+    numbers = {"income": round(summary.get("income", 0.0), 2),
+               "expense": round(summary.get("expense", 0.0), 2),
+               "savings": round(summary.get("savings", 0.0), 2)}
+    for category, amount in summary.get("top_categories", []):
+        numbers[f"category:{category}"] = round(amount, 2)
     return {"reply": reply or grounded, "engine": engine, "sources": [],
-            "spec": spec, "numbers": {}}
+            "spec": spec, "numbers": numbers}
 
 
 def _advice_figures_ok(text, summary):
@@ -398,11 +406,16 @@ def _advice_figures_ok(text, summary):
 
 
 def _semantic_answer(sources):
+    """Answer from retrieved rows alone, returning the figures it is allowed to quote.
+
+    The third value is the same kind of ledger the structured path builds, so a
+    caller can check every rupee figure in the reply against it either way.
+    """
     if not sources:
         reply = ("I could not find transactions matching that. Try naming a category, "
                  "merchant, or time period, for example 'how much did I spend on food "
                  "last month'.")
-        return reply, "rules"
+        return reply, "rules", {}
 
     numbers = {f"row:{t.id}": round(t.amount, 2) for t in sources}
     lines = ["RELEVANT TRANSACTIONS:"]
@@ -415,13 +428,13 @@ def _semantic_answer(sources):
     raw = _llm_phrase(prompt, CHAT_SYSTEM)
     accepted, _reason = _check_llm_reply(raw, numbers)
     if accepted:
-        return raw.strip(), "semantic+llm"
+        return raw.strip(), "semantic+llm", numbers
 
     listing = ["Here are the most relevant transactions I found:"]
     for t in sources[:6]:
         listing.append(f"- {t.date} - {t.description} - {t.txn_type} "
                        f"Rs.{t.amount:,.0f} ({t.category})")
-    return "\n".join(listing), "rules"
+    return "\n".join(listing), "rules", numbers
 
 
 def _retry_latest_month(user_id, spec, result):
@@ -451,6 +464,29 @@ def _retry_latest_month(user_id, spec, result):
 # --------------------------------------------------------------------------- #
 #  Public API
 # --------------------------------------------------------------------------- #
+_MONEY_WORDS = re.compile(
+    r"\b(spend|spent|spending|cost|costs|paid|pay|payment|payments|earn|earned|"
+    r"earning|earnings|income|salary|save|saved|saving|savings|money|rupee|rupees|"
+    r"rs|transaction|transactions|expense|expenses|expensive|budget|bank|account|"
+    r"upi|bill|bills|balance|credit|debit|purchase|purchases|buy|bought|"
+    r"subscription|subscriptions|cheap|afford|much|many|total)\b", re.I)
+
+
+def _is_about_money(question, spec):
+    """Whether the question refers to the user's finances at all.
+
+    Retrieval always hands back its nearest few rows however unrelated the
+    question is, so without this check something the application simply cannot
+    answer comes back as a list of arbitrary transactions. Saying so plainly is
+    more use to the reader than a confident-looking non-answer.
+    """
+    # A date on its own is not enough: "what is the weather today" parses to a
+    # period without being a question about money at all.
+    if spec.get("category") or spec.get("merchant"):
+        return True
+    return bool(_MONEY_WORDS.search(question or ""))
+
+
 def answer_detailed(user_id, question, today=None) -> dict:
     known_merchants = _known_merchants(user_id)
     spec = nlq.parse_query(question, today=today, known_categories=list(CATEGORIES),
@@ -480,10 +516,17 @@ def answer_detailed(user_id, question, today=None) -> dict:
                 "sources": [t.to_dict() for t in source_rows[:8]],
                 "spec": spec, "numbers": numbers}
 
-    reply, engine = _semantic_answer(sources)
+    if not _is_about_money(question, spec):
+        reply = ("I could not answer that one. I only know about the transactions in "
+                 "your own account, so try asking something like 'how much did I spend "
+                 "on food last month' or 'what are my biggest expenses'.")
+        return {"reply": reply, "engine": "rules", "sources": [],
+                "spec": spec, "numbers": {}}
+
+    reply, engine, numbers = _semantic_answer(sources)
     return {"reply": reply, "engine": engine,
             "sources": [t.to_dict() for t in sources[:8]],
-            "spec": spec, "numbers": {}}
+            "spec": spec, "numbers": numbers}
 
 
 def answer(user_id, question, today=None) -> str:
